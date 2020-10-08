@@ -18,7 +18,7 @@ package resources
 
 import (
 	appsv1 "k8s.io/api/apps/v1"
-	hpav2beta2 "k8s.io/api/autoscaling/v2beta2"
+	hpav1 "k8s.io/api/autoscaling/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -26,53 +26,47 @@ import (
 )
 
 // MakeHorizontalPodAutoscaler makes an HPA for the given arguments.
-func MakeHorizontalPodAutoscaler(deployment *appsv1.Deployment, args AutoscalingArgs) *hpav2beta2.HorizontalPodAutoscaler {
-	autoscalingMetrics := []hpav2beta2.MetricSpec{}
+func MakeHorizontalPodAutoscaler(deployment *appsv1.Deployment, args AutoscalingArgs) *hpav1.HorizontalPodAutoscaler {
+	autoscalingMetrics := []hpav1.MetricSpec{}
 	if args.AvgCPUUtilization != nil {
-		cpuMetric := hpav2beta2.MetricSpec{
-			Type: hpav2beta2.ResourceMetricSourceType,
-			Resource: &hpav2beta2.ResourceMetricSource{
+		cpuMetric := hpav1.MetricSpec{
+			Type: hpav1.ResourceMetricSourceType,
+			Resource: &hpav1.ResourceMetricSource{
 				Name: corev1.ResourceCPU,
-				Target: hpav2beta2.MetricTarget{
-					Type:               hpav2beta2.UtilizationMetricType,
-					AverageUtilization: args.AvgCPUUtilization,
-				},
+				TargetAverageUtilization: args.AvgCPUUtilization,
 			},
 		}
 		autoscalingMetrics = append(autoscalingMetrics, cpuMetric)
 	}
 	if args.AvgMemoryUsage != nil {
 		if memQuantity, err := resource.ParseQuantity(*args.AvgMemoryUsage); err == nil {
-			memoryMetric := hpav2beta2.MetricSpec{
-				Type: hpav2beta2.ResourceMetricSourceType,
-				Resource: &hpav2beta2.ResourceMetricSource{
+			memoryMetric := hpav1.MetricSpec{
+				Type: hpav1.ResourceMetricSourceType,
+				Resource: &hpav1.ResourceMetricSource{
 					Name: corev1.ResourceMemory,
-					Target: hpav2beta2.MetricTarget{
-						Type:         hpav2beta2.AverageValueMetricType,
-						AverageValue: &memQuantity,
-					},
+					TargetAverageValue: &memQuantity,
 				},
 			}
 			autoscalingMetrics = append(autoscalingMetrics, memoryMetric)
 		}
 	}
 
-	return &hpav2beta2.HorizontalPodAutoscaler{
+	return &hpav1.HorizontalPodAutoscaler{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            deployment.Name + "-hpa",
 			Namespace:       deployment.Namespace,
 			OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(args.BrokerCell)},
 			Labels:          Labels(args.BrokerCell.Name, args.ComponentName),
 		},
-		Spec: hpav2beta2.HorizontalPodAutoscalerSpec{
-			ScaleTargetRef: hpav2beta2.CrossVersionObjectReference{
+		Spec: hpav1.HorizontalPodAutoscalerSpec{
+			ScaleTargetRef: hpav1.CrossVersionObjectReference{
 				APIVersion: "apps/v1",
 				Kind:       "Deployment",
 				Name:       deployment.Name,
 			},
 			MaxReplicas: args.MaxReplicas,
 			MinReplicas: &args.MinReplicas,
-			Metrics:     autoscalingMetrics,
+			TargetCPUUtilizationPercentage:     args.AvgCPUUtilization,
 		},
 	}
 }

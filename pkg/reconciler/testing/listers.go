@@ -18,7 +18,7 @@ package testing
 
 import (
 	appsv1 "k8s.io/api/apps/v1"
-	hpav2beta2 "k8s.io/api/autoscaling/v2beta2"
+	hpav1 "k8s.io/api/autoscaling/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -215,5 +215,5 @@ func (l *Listers) GetBrokerCellLister() intlisters.BrokerCellLister {
 }
 
 func (l *Listers) GetHPALister() hpav2beta2listers.HorizontalPodAutoscalerLister {
-	return hpav2beta2listers.NewHorizontalPodAutoscalerLister(l.indexerFor(&hpav2beta2.HorizontalPodAutoscaler{}))
+	return hpav2beta2listers.NewHorizontalPodAutoscalerLister(l.indexerFor(&hpav1.HorizontalPodAutoscaler{}))
 }
