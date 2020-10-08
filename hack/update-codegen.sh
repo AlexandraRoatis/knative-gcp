@@ -86,7 +86,7 @@ EXTERNAL_INFORMER_PKG="k8s.io/client-go/informers" \
 "${KNATIVE_CODEGEN_PKG}"/hack/generate-knative.sh "injection" \
   k8s.io/client-go \
   k8s.io/api \
-  "autoscaling:v2beta2" \
+  "autoscaling:v1" \
   --go-header-file "${REPO_ROOT_DIR}"/hack/boilerplate/boilerplate.go.txt
 
 go install github.com/google/wire/cmd/wire
