@@ -20,7 +20,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	hpav2beta2 "k8s.io/api/autoscaling/v2beta2"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/pkg/kmeta"
 )
@@ -41,21 +40,21 @@ func MakeHorizontalPodAutoscaler(deployment *appsv1.Deployment, args Autoscaling
 		}
 		autoscalingMetrics = append(autoscalingMetrics, cpuMetric)
 	}
-	if args.AvgMemoryUsage != nil {
-		if memQuantity, err := resource.ParseQuantity(*args.AvgMemoryUsage); err == nil {
-			memoryMetric := hpav2beta2.MetricSpec{
-				Type: hpav2beta2.ResourceMetricSourceType,
-				Resource: &hpav2beta2.ResourceMetricSource{
-					Name: corev1.ResourceMemory,
-					Target: hpav2beta2.MetricTarget{
-						Type:         hpav2beta2.AverageValueMetricType,
-						AverageValue: &memQuantity,
-					},
-				},
-			}
-			autoscalingMetrics = append(autoscalingMetrics, memoryMetric)
-		}
-	}
+	//if args.AvgMemoryUsage != nil {
+	//	if memQuantity, err := resource.ParseQuantity(*args.AvgMemoryUsage); err == nil {
+	//		memoryMetric := hpav2beta2.MetricSpec{
+	//			Type: hpav2beta2.ResourceMetricSourceType,
+	//			Resource: &hpav2beta2.ResourceMetricSource{
+	//				Name: corev1.ResourceMemory,
+	//				Target: hpav2beta2.MetricTarget{
+	//					Type:         hpav2beta2.AverageValueMetricType,
+	//					AverageValue: &memQuantity,
+	//				},
+	//			},
+	//		}
+	//		autoscalingMetrics = append(autoscalingMetrics, memoryMetric)
+	//	}
+	//}
 
 	return &hpav2beta2.HorizontalPodAutoscaler{
 		ObjectMeta: metav1.ObjectMeta{
