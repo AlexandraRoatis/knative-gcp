@@ -26,7 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	appsv1listers "k8s.io/client-go/listers/apps/v1"
-	hpav2beta2listers "k8s.io/client-go/listers/autoscaling/v2beta2"
+	hpav1listers "k8s.io/client-go/listers/autoscaling/v1"
 	batchv1listers "k8s.io/client-go/listers/batch/v1"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	rbacv1listers "k8s.io/client-go/listers/rbac/v1"
@@ -214,6 +214,6 @@ func (l *Listers) GetBrokerCellLister() intlisters.BrokerCellLister {
 	return intlisters.NewBrokerCellLister(l.indexerFor(&intv1alpha1.BrokerCell{}))
 }
 
-func (l *Listers) GetHPALister() hpav2beta2listers.HorizontalPodAutoscalerLister {
-	return hpav2beta2listers.NewHorizontalPodAutoscalerLister(l.indexerFor(&hpav1.HorizontalPodAutoscaler{}))
+func (l *Listers) GetHPALister() hpav1listers.HorizontalPodAutoscalerLister {
+	return hpav1listers.NewHorizontalPodAutoscalerLister(l.indexerFor(&hpav1.HorizontalPodAutoscaler{}))
 }
