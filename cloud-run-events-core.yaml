@@ -1,0 +1,3468 @@
+# Copyright 2019 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: events-system
+  labels:
+    events.cloud.google.com/release: devel
+
+---
+# Copyright 2019 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: controller
+  namespace: events-system
+  labels:
+    events.cloud.google.com/release: devel
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: webhook
+  namespace: events-system
+  labels:
+    events.cloud.google.com/release: devel
+---
+# Service account used by GCP broker data plane.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: broker
+  namespace: events-system
+  labels:
+    events.cloud.google.com/release: devel
+
+---
+# Copyright 2019 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Use this aggregated ClusterRole when you need readonly access to "Addressables".
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: addressable-resolver
+  labels:
+    events.cloud.google.com/release: devel
+aggregationRule:
+  clusterRoleSelectors:
+  - matchLabels:
+      duck.knative.dev/addressable: "true"
+rules: []
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: service-addressable-resolver
+  labels:
+    events.cloud.google.com/release: devel
+    duck.knative.dev/addressable: "true"
+# Do not use this role directly. These rules will be added to the "addressable-resolver" role.
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - services
+  - services/status
+  verbs:
+  - get
+  - list
+  - watch
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: kservice-addressable-resolver
+  labels:
+    events.cloud.google.com/release: devel
+    duck.knative.dev/addressable: "true"
+# Do not use this role directly. These rules will be added to the "addressable-resolver" role.
+rules:
+- apiGroups:
+  - serving.knative.dev
+  resources:
+  - services
+  - services/status
+  - routes
+  - routes/status
+  verbs:
+  - get
+  - list
+  - watch
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: pubsub-topic-addressable-resolver
+  labels:
+    events.cloud.google.com/release: devel
+    duck.knative.dev/addressable: "true"
+# Do not use this role directly. These rules will be added to the "addressable-resolver" role.
+rules:
+- apiGroups:
+  - internal.events.cloud.google.com
+  resources:
+  - topics
+  - topics/status
+  verbs:
+  - get
+  - list
+  - watch
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: events-channel-addressable-resolver
+  labels:
+    events.cloud.google.com/release: devel
+    duck.knative.dev/addressable: "true"
+# Do not use this role directly. These rules will be added to the "addressable-resolver" role.
+rules:
+- apiGroups:
+  - messaging.cloud.google.com
+  resources:
+  - channels
+  - channels/status
+  verbs:
+  - get
+  - list
+  - watch
+
+---
+# Copyright 2019 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Use this aggregated ClusterRole when you nead and update permissions on "Channelables".
+
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: events-channel-channelable-manipulator
+  labels:
+    events.cloud.google.com/release: devel
+    duck.knative.dev/channelable: "true"
+# Do not use this role directly. These rules will be added to the "channelable-manipulator" role.
+rules:
+- apiGroups:
+  - messaging.cloud.google.com
+  resources:
+  - channels
+  - channels/status
+  verbs:
+  - create
+  - get
+  - list
+  - watch
+  - update
+  - patch
+
+---
+# Copyright 2019 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: events-system-controller
+  labels:
+    events.cloud.google.com/release: devel
+rules:
+- apiGroups:
+  - internal.events.cloud.google.com
+  resources:
+  - pullsubscriptions
+  - topics
+  verbs: &everything
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - internal.events.cloud.google.com
+  resources:
+  - pullsubscriptions/status
+  - topics/status
+  verbs:
+  - get
+  - update
+  - patch
+- apiGroups:
+  - messaging.cloud.google.com
+  resources:
+  - channels
+  verbs: *everything
+- apiGroups:
+  - messaging.cloud.google.com
+  resources:
+  - channels/status
+  verbs:
+  - get
+  - update
+  - patch
+- apiGroups:
+  - events.cloud.google.com
+  resources:
+  - cloudauditlogssources
+  - cloudstoragesources
+  - cloudschedulersources
+  - cloudpubsubsources
+  - cloudbuildsources
+  verbs: *everything
+- apiGroups:
+  - events.cloud.google.com
+  resources:
+  - cloudauditlogssources/status
+  - cloudstoragesources/status
+  - cloudschedulersources/status
+  - cloudpubsubsources/status
+  - cloudbuildsources/status
+  verbs:
+  - get
+  - update
+  - patch
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs: *everything
+- apiGroups:
+  - autoscaling
+  resources:
+  - horizontalpodautoscalers
+  verbs: *everything
+- apiGroups:
+  - serving.knative.dev
+  resources:
+  - services
+  verbs: *everything
+- apiGroups:
+  - batch
+  resources:
+  - jobs
+  verbs: *everything
+- apiGroups:
+  - ""
+  resources:
+  - services
+  - serviceaccounts
+  - pods # For updating pod annotation to trigger configmap mount refresh.
+  verbs: *everything
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  - endpoints
+  verbs: &readOnly
+  - get
+  - list
+  - watch
+- apiGroups: [""]
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+- apiGroups:
+  - internal.events.cloud.google.com
+  resources:
+  - brokercells
+  - brokercells/status
+  verbs: *everything
+- apiGroups:
+  - eventing.knative.dev
+  resources:
+  - brokers
+  - brokers/status
+  - triggers
+  - triggers/status
+  verbs: *everything
+- apiGroups:
+  - keda.k8s.io
+  resources:
+  - scaledobjects
+  verbs: *everything
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs: *everything
+
+---
+# Copyright 2019 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: events-system-controller
+  namespace: events-system
+  labels:
+    events.cloud.google.com/release: devel
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  - configmaps
+  verbs: &everything
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+---
+# Role for GCP broker data plane.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: events-system-broker
+  namespace: events-system
+  labels:
+    events.cloud.google.com/release: devel
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+
+---
+# Copyright 2020 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Use this aggregated ClusterRole when you need to read "Sources".
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: events-system-source-observer
+  labels:
+    events.cloud.google.com/release: devel
+aggregationRule:
+  clusterRoleSelectors:
+  - matchLabels:
+      duck.knative.dev/source: "true"
+rules: [] # Rules are automatically filled in by the controller manager.
+---
+# The role is needed for the aggregated role events-system-source-observer in knative-gcp to provide readonly access to "Sources".
+# The role is needed for the aggregated role source-observer in knative-eventing to provide readonly access to "Sources".
+# See https://github.com/knative/eventing/blob/master/config/200-source-observer-clusterrole.yaml.
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: knative-gcp-sources-observer
+  labels:
+    events.cloud.google.com/release: devel
+    duck.knative.dev/source: "true"
+# Do not use this role directly. These rules will be added to the "events-system-source-observer" in knative-gcp and "source-observer" role in knative-eventing.
+rules:
+- apiGroups:
+  - "events.cloud.google.com"
+  resources:
+  - "cloudstoragesources"
+  - "cloudpubsubsources"
+  - "cloudauditlogssources"
+  - "cloudschedulersources"
+  - "cloudbuildsources"
+  verbs:
+  - get
+  - list
+  - watch
+
+---
+# Copyright 2019 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: events-system-webhook
+  labels:
+    events.cloud.google.com/release: devel
+rules:
+- # For watching logging configuration and getting certs.
+  apiGroups:
+  - ""
+  resources:
+  - "configmaps"
+  verbs:
+  - "get"
+  - "list"
+  - "watch"
+- # For manipulating certs into secrets.
+  apiGroups:
+  - ""
+  resources:
+  - "secrets"
+  verbs:
+  - "get"
+  - "create"
+  - "update"
+  - "list"
+  - "watch"
+- # For getting our Deployment so we can decorate with ownerref.
+  apiGroups:
+  - "apps"
+  resources:
+  - "deployments"
+  verbs:
+  - "get"
+- apiGroups:
+  - "apps"
+  resources:
+  - "deployments/finalizers"
+  verbs:
+  - update
+- # For actually registering our webhook.
+  apiGroups:
+  - "admissionregistration.k8s.io"
+  resources:
+  - "mutatingwebhookconfigurations"
+  - "validatingwebhookconfigurations"
+  verbs:
+  - "get"
+  - "list"
+  - "create"
+  - "update"
+  - "delete"
+  - "patch"
+  - "watch"
+- # Necessary for conversion webhook. These are copied from the serving
+  # TODO: Do we really need all these permissions?
+  apiGroups: ["apiextensions.k8s.io"]
+  resources: ["customresourcedefinitions"]
+  verbs: ["get", "list", "create", "update", "delete", "patch", "watch"]
+- # For leader election
+  apiGroups:
+  - "coordination.k8s.io"
+  resources:
+  - "leases"
+  verbs:
+  - "get"
+  - "list"
+  - "create"
+  - "update"
+  - "delete"
+  - "patch"
+  - "watch"
+
+---
+# Copyright 2019 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: events-system-controller
+  labels:
+    events.cloud.google.com/release: devel
+subjects:
+- kind: ServiceAccount
+  name: controller
+  namespace: events-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: events-system-controller
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: events-system-controller-resolver
+  labels:
+    events.cloud.google.com/release: devel
+subjects:
+- kind: ServiceAccount
+  name: controller
+  namespace: events-system
+# An aggregated ClusterRole for all Addressable CRDs. 
+# Ref: https://github.com/knative/eventing/blob/master/config/200-addressable-resolvers-clusterrole.yaml
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: addressable-resolver
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: events-system-controller-source-observer
+  labels:
+    events.cloud.google.com/release: devel
+subjects:
+- kind: ServiceAccount
+  name: controller
+  namespace: events-system
+roleRef:
+  kind: ClusterRole
+  name: events-system-source-observer
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: events-system-webhook
+  labels:
+    events.cloud.google.com/release: devel
+subjects:
+- kind: ServiceAccount
+  name: webhook
+  namespace: events-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: events-system-webhook
+
+---
+# Copyright 2019 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: events-system-controller
+  namespace: events-system
+  labels:
+    events.cloud.google.com/release: devel
+subjects:
+- kind: ServiceAccount
+  name: controller
+  namespace: events-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: events-system-controller
+---
+# RoleBinding for GCP broker data plane.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: events-system-broker
+  namespace: events-system
+  labels:
+    events.cloud.google.com/release: devel
+subjects:
+- kind: ServiceAccount
+  name: broker
+  namespace: events-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: events-system-broker
+
+---
+# Copyright 2020 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: brokercells.internal.events.cloud.google.com
+  labels:
+    events.cloud.google.com/release: devel
+    events.cloud.google.com/crd-install: "true"
+spec:
+  group: internal.events.cloud.google.com
+  names:
+    kind: BrokerCell
+    plural: brokercells
+    singular: brokercell
+    categories:
+    - knative-internal
+  scope: Namespaced
+  preserveUnknownFields: false
+  conversion:
+    strategy: Webhook
+    webhook:
+      # conversionReviewVersions indicates what ConversionReview versions are understood/preferred by the webhook.
+      # The first version in the list understood by the API server is sent to the webhook.
+      # The webhook must respond with a ConversionReview object in the same version it received.
+      conversionReviewVersions: ["v1", "v1beta1"]
+      clientConfig:
+        service:
+          name: webhook
+          namespace: events-system
+  versions:
+  - &version
+    name: v1alpha1
+    served: true
+    storage: true
+    subresources:
+      status: {}
+    additionalPrinterColumns:
+    - name: Ready
+      type: string
+      jsonPath: ".status.conditions[?(@.type==\"Ready\")].status"
+    - name: Reason
+      type: string
+      jsonPath: ".status.conditions[?(@.type==\"Ready\")].reason"
+    - name: Age
+      type: date
+      jsonPath: .metadata.creationTimestamp
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              components:
+                type: object
+                properties:
+                  fanout:
+                    type: object
+                    properties:
+                      avgCPUUtilization:
+                        type: integer
+                        format: int64
+                      avgMemoryUsage:
+                        type: string
+                      cpuRequest:
+                        type: string
+                      cpuLimit:
+                        type: string
+                      memoryRequest:
+                        type: string
+                      memoryLimit:
+                        type: string
+                      minReplicas:
+                        type: integer
+                        format: int64
+                      maxReplicas:
+                        type: integer
+                        format: int64
+                  ingress:
+                    type: object
+                    properties:
+                      avgCPUUtilization:
+                        type: integer
+                        format: int64
+                      avgMemoryUsage:
+                        type: string
+                      cpuRequest:
+                        type: string
+                      cpuLimit:
+                        type: string
+                      memoryRequest:
+                        type: string
+                      memoryLimit:
+                        type: string
+                      minReplicas:
+                        type: integer
+                        format: int64
+                      maxReplicas:
+                        type: integer
+                        format: int64
+                  retry:
+                    type: object
+                    properties:
+                      avgCPUUtilization:
+                        type: integer
+                        format: int64
+                      avgMemoryUsage:
+                        type: string
+                      cpuRequest:
+                        type: string
+                      cpuLimit:
+                        type: string
+                      memoryRequest:
+                        type: string
+                      memoryLimit:
+                        type: string
+                      minReplicas:
+                        type: integer
+                        format: int64
+                      maxReplicas:
+                        type: integer
+                        format: int64
+          status:
+            type: object
+            properties:
+              observedGeneration:
+                type: integer
+                format: int64
+              conditions:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    lastTransitionTime:
+                      # we use a string in the stored object but a wrapper object
+                      # at runtime.
+                      type: string
+                    message:
+                      type: string
+                    reason:
+                      type: string
+                    severity:
+                      type: string
+                    status:
+                      type: string
+                    type:
+                      type: string
+                  required:
+                  - type
+                  - status
+              ingressTemplate:
+                type: string
+                description: >
+                  IngressTemplate contains a URI template as specified by RFC6570
+                  to generate Broker ingress URIs. It may contain variables `name`
+                  and `namespace`.
+
+
+---
+# Copyright 2020 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: channels.messaging.cloud.google.com
+  labels:
+    events.cloud.google.com/release: devel
+    events.cloud.google.com/crd-install: "true"
+    messaging.knative.dev/subscribable: "true"
+    duck.knative.dev/addressable: "true"
+spec:
+  group: messaging.cloud.google.com
+  names:
+    kind: Channel
+    plural: channels
+    singular: channel
+    categories:
+    - all
+    - knative
+    - pubsub
+    - messaging
+    - channel
+    shortNames:
+    - pschan
+  scope: Namespaced
+  preserveUnknownFields: false
+  conversion:
+    strategy: Webhook
+    webhook:
+      # conversionReviewVersions indicates what ConversionReview versions are understood/preferred by the webhook.
+      # The first version in the list understood by the API server is sent to the webhook.
+      # The webhook must respond with a ConversionReview object in the same version it received.
+      conversionReviewVersions: ["v1", "v1beta1"]
+      clientConfig:
+        service:
+          name: webhook
+          namespace: events-system
+  versions:
+  - &version
+    name: v1beta1
+    served: true
+    storage: true
+    subresources:
+      status: {}
+    additionalPrinterColumns:
+    - name: Ready
+      type: string
+      jsonPath: ".status.conditions[?(@.type==\"Ready\")].status"
+    - name: Reason
+      type: string
+      jsonPath: ".status.conditions[?(@.type==\"Ready\")].reason"
+    - name: Address
+      type: string
+      jsonPath: .status.address.url
+    - name: Age
+      type: date
+      jsonPath: .metadata.creationTimestamp
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              serviceAccountName:
+                type: string
+                description: >
+                  k8s service account used to bind to a google service account to
+                  poll the Cloud Pub/Sub Subscription. The value of the k8s service
+                  account must be a valid DNS subdomain name. (see https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#dns-subdomain-names)
+
+              secret:
+                type: object
+                description: >
+                  Credential to use to manage Cloud Pub/Sub. The value of the secret
+                  entry must be a service account key in the JSON format (see https://cloud.google.com/iam/docs/creating-managing-service-account-keys).
+                  Defaults to secret.name of 'google-cloud-key' and secret.key of
+                  'key.json'.
+
+                properties:
+                  name:
+                    type: string
+                  key:
+                    type: string
+                  optional:
+                    type: boolean
+              project:
+                type: string
+                description: >
+                  ID of the Google Cloud Project to own the Pub/Sub credentials. E.g.
+                  'my-project-1234' rather than its display name, 'My Project' or
+                  its number '1234567890'. If omitted uses the Project ID from the
+                  GKE cluster metadata service.
+
+              subscribers:
+                type: array
+                items:
+                  type: object
+                  required:
+                  - uid
+                  properties:
+                    uid:
+                      type: string
+                      minLength: 1
+                    generation:
+                      type: integer
+                    subscriberUri:
+                      type: string
+                    replyUri:
+                      type: string
+                    delivery:
+                      type: object
+                      properties:
+                        deadLetterSink:
+                          type: object
+                          properties:
+                            ref:
+                              type: object
+                              properties:
+                                kind:
+                                  type: string
+                                namespace:
+                                  type: string
+                                name:
+                                  type: string
+                                apiVersion:
+                                  type: string
+                            uri:
+                              type: string
+                        retry:
+                          type: integer
+                        backoffPolicy:
+                          type: string
+                        backoffDelay:
+                          type: string
+          status:
+            type: object
+            properties:
+              # No subscribable in v1beta1
+              observedGeneration:
+                type: integer
+                format: int64
+              conditions:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    lastTransitionTime:
+                      # We use a string in the stored object but a wrapper object at runtime.
+                      type: string
+                    message:
+                      type: string
+                    reason:
+                      type: string
+                    severity:
+                      type: string
+                    status:
+                      type: string
+                    type:
+                      type: string
+                  required:
+                  - type
+                  - status
+              address:
+                type: object
+                properties:
+                  url:
+                    type: string
+              subscribers:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    uid:
+                      type: string
+                    observedGeneration:
+                      type: integer
+                      format: int64
+                    ready:
+                      type: string
+                    message:
+                      type: string
+              projectId:
+                type: string
+              subscriptionId:
+                type: string
+
+---
+# Copyright 2020 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    duck.knative.dev/source: "true"
+    events.cloud.google.com/release: devel
+    events.cloud.google.com/crd-install: "true"
+  annotations:
+    registry.knative.dev/eventTypes: |
+      [
+        {"type": "google.cloud.audit.log.v1.written", "schema": "https://raw.githubusercontent.com/googleapis/google-cloudevents/master/proto/google/events/cloud/audit/v1/data.proto", "description": "Common audit log event type for all Google Cloud Platform API operations." }
+      ]
+  name: cloudauditlogssources.events.cloud.google.com
+spec:
+  group: events.cloud.google.com
+  names:
+    categories:
+    - all
+    - knative
+    - cloudauditlogssource
+    - sources
+    kind: CloudAuditLogsSource
+    plural: cloudauditlogssources
+  scope: Namespaced
+  preserveUnknownFields: false
+  conversion:
+    strategy: Webhook
+    webhook:
+      # conversionReviewVersions indicates what ConversionReview versions are understood/preferred by the webhook.
+      # The first version in the list understood by the API server is sent to the webhook.
+      # The webhook must respond with a ConversionReview object in the same version it received.
+      conversionReviewVersions: ["v1", "v1beta1"]
+      clientConfig:
+        service:
+          name: webhook
+          namespace: events-system
+  versions:
+  - &version
+    name: v1
+    served: true
+    storage: true
+    subresources:
+      status: {}
+    additionalPrinterColumns:
+    - name: Ready
+      type: string
+      jsonPath: ".status.conditions[?(@.type==\"Ready\")].status"
+    - name: Reason
+      type: string
+      jsonPath: ".status.conditions[?(@.type==\"Ready\")].reason"
+    - name: Age
+      type: date
+      jsonPath: .metadata.creationTimestamp
+    # We remove status.ServiceAccountName from the schema in v1.
+    schema:
+      openAPIV3Schema: &openAPIV3Schema
+        type: object
+        properties: &properties
+          spec:
+            type: object
+            required:
+            - sink
+            - serviceName
+            - methodName
+            properties:
+              sink:
+                type: object
+                description: >
+                  Sink which receives the notifications.
+
+                properties:
+                  uri:
+                    type: string
+                    minLength: 1
+                  ref:
+                    type: object
+                    required:
+                    - apiVersion
+                    - kind
+                    - name
+                    properties:
+                      apiVersion:
+                        type: string
+                        minLength: 1
+                      kind:
+                        type: string
+                        minLength: 1
+                      namespace:
+                        type: string
+                      name:
+                        type: string
+                        minLength: 1
+              ceOverrides:
+                type: object
+                description: >
+                  Defines overrides to control modifications of the event sent to
+                  the sink.
+
+                properties:
+                  extensions:
+                    type: object
+                    description: >
+                      Extensions specify what attribute are added or overridden on
+                      the outbound event. Each `Extensions` key-value pair are set
+                      on the event as an attribute extension independently.
+
+                    x-kubernetes-preserve-unknown-fields: true
+              serviceAccountName:
+                type: string
+                description: >
+                  Kubernetes service account used to bind to a google service account
+                  to poll the Cloud Pub/Sub Subscription. The value of the Kubernetes
+                  service account must be a valid DNS subdomain name. (see https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#dns-subdomain-names)
+
+              secret:
+                type: object
+                description: >
+                  Credential used to poll the Cloud Pub/Sub Subscription. It is not
+                  used to create or delete the Subscription, only to poll it. The
+                  value of the secret entry must be a service account key in the JSON
+                  format (see https://cloud.google.com/iam/docs/creating-managing-service-account-keys).
+                  Defaults to secret.name of 'google-cloud-key' and secret.key of
+                  'key.json'.
+
+                properties:
+                  name:
+                    type: string
+                  key:
+                    type: string
+                  optional:
+                    type: boolean
+              project:
+                type: string
+                description: >
+                  Google Cloud Project ID of the project into which the topic should
+                  be created. If omitted uses the Project ID from the GKE cluster
+                  metadata service.
+
+              serviceName:
+                type: string
+              methodName:
+                type: string
+              resourceName:
+                type: string
+          status: &status
+            type: object
+            properties: &statusProperties
+              observedGeneration:
+                type: integer
+                format: int64
+              conditions:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    lastTransitionTime:
+                      # We use a string in the stored object but a wrapper object at runtime.
+                      type: string
+                    message:
+                      type: string
+                    reason:
+                      type: string
+                    severity:
+                      type: string
+                    status:
+                      type: string
+                    type:
+                      type: string
+                  required:
+                  - type
+                  - status
+              sinkUri:
+                type: string
+              ceAttributes:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                    source:
+                      type: string
+              projectId:
+                type: string
+              topicId:
+                type: string
+              subscriptionId:
+                type: string
+              stackdriverSink:
+                type: string
+                description: >
+                  ID of the Stackdriver sink used to publish audit log messages.
+
+  - !!merge <<: *version
+    name: v1beta1
+    served: true
+    storage: false
+    # v1beta has status.properties.serviceAccountName in the schema
+    schema:
+      openAPIV3Schema:
+        !!merge <<: *openAPIV3Schema
+        properties:
+          !!merge <<: *properties
+          status:
+            !!merge <<: *status
+            properties:
+              !!merge <<: *statusProperties
+              serviceAccountName:
+                type: string
+
+---
+# Copyright 2020 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    duck.knative.dev/source: "true"
+    events.cloud.google.com/release: devel
+    events.cloud.google.com/crd-install: "true"
+  annotations:
+    registry.knative.dev/eventTypes: |
+      [
+        {
+          "type": "google.cloud.cloudbuild.build.v1.statusChanged",
+          "schema": "https://raw.githubusercontent.com/googleapis/google-cloudevents/master/proto/google/events/cloud/cloudbuild/v1/data.proto",
+          "description": "This event is sent when your build's state changes, such as when your build is created, when your build transitions to a working state, and when your build completes."
+        }
+      ]
+  name: cloudbuildsources.events.cloud.google.com
+spec:
+  group: events.cloud.google.com
+  names:
+    categories:
+    - all
+    - knative
+    - cloudbuildsource
+    - sources
+    kind: CloudBuildSource
+    plural: cloudbuildsources
+  scope: Namespaced
+  preserveUnknownFields: false
+  conversion:
+    strategy: Webhook
+    webhook:
+      # conversionReviewVersions indicates what ConversionReview versions are understood/preferred by the webhook.
+      # The first version in the list understood by the API server is sent to the webhook.
+      # The webhook must respond with a ConversionReview object in the same version it received.
+      conversionReviewVersions: ["v1", "v1beta1"]
+      clientConfig:
+        service:
+          name: webhook
+          namespace: events-system
+  versions:
+  - &version
+    name: v1
+    served: true
+    storage: true
+    subresources:
+      status: {}
+    additionalPrinterColumns:
+    - name: Ready
+      type: string
+      jsonPath: ".status.conditions[?(@.type==\"Ready\")].status"
+    - name: Reason
+      type: string
+      jsonPath: ".status.conditions[?(@.type==\"Ready\")].reason"
+    - name: Age
+      type: date
+      jsonPath: .metadata.creationTimestamp
+    # We remove status.ServiceAccountName from the schema in v1.
+    schema: &v1Schema
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            required:
+            - sink
+            properties:
+              sink:
+                type: object
+                description: >
+                  Sink which receives the notifications.
+
+                properties:
+                  uri:
+                    type: string
+                    minLength: 1
+                  ref:
+                    type: object
+                    required:
+                    - apiVersion
+                    - kind
+                    - name
+                    properties:
+                      apiVersion:
+                        type: string
+                        minLength: 1
+                      kind:
+                        type: string
+                        minLength: 1
+                      namespace:
+                        type: string
+                      name:
+                        type: string
+                        minLength: 1
+              ceOverrides:
+                type: object
+                description: >
+                  Defines overrides to control modifications of the event sent to
+                  the sink.
+
+                properties:
+                  extensions:
+                    type: object
+                    description: >
+                      Extensions specify what attribute are added or overridden on
+                      the outbound event. Each `Extensions` key-value pair are set
+                      on the event as an attribute extension independently.
+
+                    x-kubernetes-preserve-unknown-fields: true
+              serviceAccountName:
+                type: string
+                description: >
+                  Kubernetes service account used to bind to a google service account
+                  to poll the Cloud Pub/Sub Subscription. The value of the Kubernetes
+                  service account must be a valid DNS subdomain name. (see https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#dns-subdomain-names)
+
+              secret:
+                type: object
+                description: >
+                  Credential used to poll the Cloud Pub/Sub Subscription. It is not
+                  used to create or delete the Subscription, only to poll it. The
+                  value of the secret entry must be a service account key in the JSON
+                  format (see https://cloud.google.com/iam/docs/creating-managing-service-account-keys).
+                  Defaults to secret.name of 'google-cloud-key' and secret.key of
+                  'key.json'.
+
+                properties:
+                  name:
+                    type: string
+                  key:
+                    type: string
+                  optional:
+                    type: boolean
+              project:
+                type: string
+                description: >
+                  Google Cloud Project ID of the project into which the topic should
+                  be created. If omitted uses the Project ID from the GKE cluster
+                  metadata service.
+
+          status:
+            type: object
+            properties:
+              observedGeneration:
+                type: integer
+                format: int64
+              conditions:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    lastTransitionTime:
+                      # We use a string in the stored object but a wrapper object at runtime.
+                      type: string
+                    message:
+                      type: string
+                    reason:
+                      type: string
+                    severity:
+                      type: string
+                    status:
+                      type: string
+                    type:
+                      type: string
+                  required:
+                  - type
+                  - status
+              sinkUri:
+                type: string
+              ceAttributes:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                    source:
+                      type: string
+              projectId:
+                type: string
+              topicId:
+                type: string
+              subscriptionId:
+                type: string
+  - !!merge <<: *version
+    name: v1beta1
+    served: true
+    storage: false
+    schema: *v1Schema
+
+---
+# Copyright 2020 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    duck.knative.dev/source: "true"
+    events.cloud.google.com/release: devel
+    events.cloud.google.com/crd-install: "true"
+  annotations:
+    registry.knative.dev/eventTypes: |
+      [
+        { "type": "google.cloud.pubsub.topic.v1.messagePublished", "schema": "https://raw.githubusercontent.com/googleapis/google-cloudevents/master/proto/google/events/cloud/pubsub/v1/data.proto", "description": "This event is sent when a message is published to a Cloud Pub/Sub topic."}
+      ]
+  name: cloudpubsubsources.events.cloud.google.com
+spec:
+  group: events.cloud.google.com
+  names:
+    categories:
+    - all
+    - knative
+    - cloudpubsubsource
+    - sources
+    kind: CloudPubSubSource
+    plural: cloudpubsubsources
+  scope: Namespaced
+  preserveUnknownFields: false
+  conversion:
+    strategy: Webhook
+    webhook:
+      # conversionReviewVersions indicates what ConversionReview versions are understood/preferred by the webhook.
+      # The first version in the list understood by the API server is sent to the webhook.
+      # The webhook must respond with a ConversionReview object in the same version it received.
+      conversionReviewVersions: ["v1", "v1beta1"]
+      clientConfig:
+        service:
+          name: webhook
+          namespace: events-system
+  versions:
+  - &version
+    name: v1
+    served: true
+    storage: true
+    subresources:
+      status: {}
+    additionalPrinterColumns:
+    - name: Ready
+      type: string
+      jsonPath: ".status.conditions[?(@.type==\"Ready\")].status"
+    - name: Reason
+      type: string
+      jsonPath: ".status.conditions[?(@.type==\"Ready\")].reason"
+    - name: Age
+      type: date
+      jsonPath: .metadata.creationTimestamp
+    # We remove status.ServiceAccountName from the schema in v1.
+    schema:
+      openAPIV3Schema: &openAPIV3Schema
+        type: object
+        properties: &properties
+          spec:
+            type: object
+            required:
+            - sink
+            - topic
+            properties:
+              sink:
+                type: object
+                description: >
+                  Sink which receives the notifications.
+
+                properties:
+                  uri:
+                    type: string
+                    minLength: 1
+                  ref:
+                    type: object
+                    required:
+                    - apiVersion
+                    - kind
+                    - name
+                    properties:
+                      apiVersion:
+                        type: string
+                        minLength: 1
+                      kind:
+                        type: string
+                        minLength: 1
+                      namespace:
+                        type: string
+                      name:
+                        type: string
+                        minLength: 1
+              ceOverrides:
+                type: object
+                description: >
+                  Defines overrides to control modifications of the event sent to
+                  the sink.
+
+                properties:
+                  extensions:
+                    type: object
+                    description: >
+                      Extensions specify what attribute are added or overridden on
+                      the outbound event. Each `Extensions` key-value pair are set
+                      on the event as an attribute extension independently.
+
+                    x-kubernetes-preserve-unknown-fields: true
+              serviceAccountName:
+                type: string
+                description: >
+                  Kubernetes service account used to bind to a google service account
+                  to poll the Cloud Pub/Sub Subscription. The value of the Kubernetes
+                  service account must be a valid DNS subdomain name. (see https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#dns-subdomain-names)
+
+              secret:
+                type: object
+                description: >
+                  Credential used to poll the Cloud Pub/Sub Subscription. It is not
+                  used to create or delete the Subscription, only to poll it. The
+                  value of the secret entry must be a service account key in the JSON
+                  format (see https://cloud.google.com/iam/docs/creating-managing-service-account-keys).
+                  Defaults to secret.name of 'google-cloud-key' and secret.key of
+                  'key.json'.
+
+                properties:
+                  name:
+                    type: string
+                  key:
+                    type: string
+                  optional:
+                    type: boolean
+              project:
+                type: string
+                description: >
+                  Google Cloud Project ID of the project into which the topic should
+                  be created. If omitted uses the Project ID from the GKE cluster
+                  metadata service.
+
+              topic:
+                type: string
+                description: >
+                  ID of the Cloud Pub/Sub Topic to Subscribe to. It must be in the
+                  form of the unique identifier within the project, not the entire
+                  name. E.g. it must be 'laconia', not 'projects/my-gcp-project/topics/laconia'.
+
+              ackDeadline:
+                type: string
+                description: >
+                  The default maximum time after a subscriber receives a message before
+                  the subscriber should acknowledge the message. Defaults to `30s`.
+                  Valid time units are `s`, `m`, `h`. The minimum deadline you can
+                  specify is 0 seconds. The maximum deadline you can specify is 600
+                  seconds (10 minutes).
+
+              retainAckedMessages:
+                type: boolean
+                description: >
+                  Whether to retain acknowledged messages. If true, acknowledged messages
+                  will not be expunged until they fall out of the RetentionDuration
+                  window.
+
+              retentionDuration:
+                type: string
+                description: >
+                  How long to retain messages in backlog, from the time of publish.
+                  If retainAckedMessages is true, this duration affects the retention
+                  of acknowledged messages, otherwise only unacknowledged messages
+                  are retained. Defaults to 7 days (`168h`). Cannot be longer than
+                  7 days or shorter than 10 minutes. Valid time units are `s`, `m`,
+                  `h`.
+
+          status: &status
+            type: object
+            properties: &statusProperties
+              observedGeneration:
+                type: integer
+                format: int64
+              conditions:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    lastTransitionTime:
+                      # We use a string in the stored object but a wrapper object at runtime.
+                      type: string
+                    message:
+                      type: string
+                    reason:
+                      type: string
+                    severity:
+                      type: string
+                    status:
+                      type: string
+                    type:
+                      type: string
+                  required:
+                  - type
+                  - status
+              sinkUri:
+                type: string
+              ceAttributes:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                    source:
+                      type: string
+              projectId:
+                type: string
+              topicId:
+                type: string
+              subscriptionId:
+                type: string
+  - !!merge <<: *version
+    name: v1beta1
+    served: true
+    storage: false
+    # v1beta has status.properties.serviceAccountName in the schema
+    schema:
+      openAPIV3Schema:
+        !!merge <<: *openAPIV3Schema
+        properties:
+          !!merge <<: *properties
+          status:
+            !!merge <<: *status
+            properties:
+              !!merge <<: *statusProperties
+              serviceAccountName:
+                type: string
+
+---
+# Copyright 2020 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    duck.knative.dev/source: "true"
+    events.cloud.google.com/release: devel
+    events.cloud.google.com/crd-install: "true"
+  annotations:
+    registry.knative.dev/eventTypes: |
+      [
+        { "type": "google.cloud.scheduler.job.v1.executed", "schema":"https://raw.githubusercontent.com/googleapis/google-cloudevents/master/proto/google/events/cloud/scheduler/v1/data.proto", "description": "This event is sent when a job is executed in Cloud Scheduler."}
+      ]
+  name: cloudschedulersources.events.cloud.google.com
+spec:
+  group: events.cloud.google.com
+  names:
+    categories:
+    - all
+    - knative
+    - cloudschedulersource
+    - sources
+    kind: CloudSchedulerSource
+    plural: cloudschedulersources
+  scope: Namespaced
+  preserveUnknownFields: false
+  conversion:
+    strategy: Webhook
+    webhook:
+      # conversionReviewVersions indicates what ConversionReview versions are understood/preferred by the webhook.
+      # The first version in the list understood by the API server is sent to the webhook.
+      # The webhook must respond with a ConversionReview object in the same version it received.
+      conversionReviewVersions: ["v1", "v1beta1"]
+      clientConfig:
+        service:
+          name: webhook
+          namespace: events-system
+  versions:
+  - &version
+    name: v1
+    served: true
+    storage: true
+    subresources:
+      status: {}
+    additionalPrinterColumns:
+    - name: Ready
+      type: string
+      jsonPath: ".status.conditions[?(@.type==\"Ready\")].status"
+    - name: Reason
+      type: string
+      jsonPath: ".status.conditions[?(@.type==\"Ready\")].reason"
+    - name: Age
+      type: date
+      jsonPath: .metadata.creationTimestamp
+    # We remove status.ServiceAccountName from the schema in v1.
+    schema:
+      openAPIV3Schema: &openAPIV3Schema
+        type: object
+        properties: &properties
+          spec:
+            type: object
+            required:
+            - location
+            - schedule
+            - sink
+            - data
+            properties:
+              sink:
+                type: object
+                description: >
+                  Sink which receives the notifications.
+
+                properties:
+                  uri:
+                    type: string
+                    minLength: 1
+                  ref:
+                    type: object
+                    required:
+                    - apiVersion
+                    - kind
+                    - name
+                    properties:
+                      apiVersion:
+                        type: string
+                        minLength: 1
+                      kind:
+                        type: string
+                        minLength: 1
+                      namespace:
+                        type: string
+                      name:
+                        type: string
+                        minLength: 1
+              ceOverrides:
+                type: object
+                description: >
+                  Defines overrides to control modifications of the event sent to
+                  the sink.
+
+                properties:
+                  extensions:
+                    type: object
+                    description: >
+                      Extensions specify what attribute are added or overridden on
+                      the outbound event. Each `Extensions` key-value pair are set
+                      on the event as an attribute extension independently.
+
+                    x-kubernetes-preserve-unknown-fields: true
+              serviceAccountName:
+                type: string
+                description: >
+                  Kubernetes service account used to bind to a google service account
+                  to poll the Cloud Pub/Sub Subscription. The value of the Kubernetes
+                  service account must be a valid DNS subdomain name. (see https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#dns-subdomain-names)
+
+              secret:
+                type: object
+                description: >
+                  Credential used to poll the Cloud Pub/Sub Subscription. It is not
+                  used to create or delete the Subscription, only to poll it. The
+                  value of the secret entry must be a service account key in the JSON
+                  format (see https://cloud.google.com/iam/docs/creating-managing-service-account-keys).
+                  Defaults to secret.name of 'google-cloud-key' and secret.key of
+                  'key.json'.
+
+                properties:
+                  name:
+                    type: string
+                  key:
+                    type: string
+                  optional:
+                    type: boolean
+              project:
+                type: string
+                description: >
+                  Google Cloud Project ID of the project into which the topic should
+                  be created. If omitted uses the Project ID from the GKE cluster
+                  metadata service.
+
+              location:
+                type: string
+                description: >
+                  Location to create the Scheduler job in.
+
+              schedule:
+                type: string
+                description: >
+                  Frequency using the unix-cron format. Or App Engine Cron format.
+
+              data:
+                type: string
+                description: >
+                  Data to send in the payload of the Event.
+
+          status: &status
+            type: object
+            properties: &statusProperties
+              observedGeneration:
+                type: integer
+                format: int64
+              conditions:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    lastTransitionTime:
+                      # We use a string in the stored object but a wrapper object at runtime.
+                      type: string
+                    message:
+                      type: string
+                    reason:
+                      type: string
+                    severity:
+                      type: string
+                    status:
+                      type: string
+                    type:
+                      type: string
+                  required:
+                  - type
+                  - status
+              sinkUri:
+                type: string
+              ceAttributes:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                    source:
+                      type: string
+              projectId:
+                type: string
+              topicId:
+                type: string
+              subscriptionId:
+                type: string
+              jobName:
+                type: string
+  - !!merge <<: *version
+    name: v1beta1
+    served: true
+    storage: false
+    # v1beta has status.properties.serviceAccountName in the schema
+    schema:
+      openAPIV3Schema:
+        !!merge <<: *openAPIV3Schema
+        properties:
+          !!merge <<: *properties
+          status:
+            !!merge <<: *status
+            properties:
+              !!merge <<: *statusProperties
+              serviceAccountName:
+                type: string
+
+---
+# Copyright 2020 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    duck.knative.dev/source: "true"
+    events.cloud.google.com/release: devel
+    events.cloud.google.com/crd-install: "true"
+  annotations:
+    registry.knative.dev/eventTypes: |
+      [
+        { "type": "google.cloud.storage.object.v1.finalized", "schema": "https://raw.githubusercontent.com/googleapis/google-cloudevents/master/proto/google/events/cloud/storage/v1/data.proto", "description": "Sent when a new object (or a new generation of an existing object) is successfully created in the bucket. This includes copying or rewriting an existing object. A failed upload does not trigger this event." },
+        { "type": "google.cloud.storage.object.v1.deleted", "schema": "https://raw.githubusercontent.com/googleapis/google-cloudevents/master/proto/google/events/cloud/storage/v1/data.proto", "description": "Sent when an object has been permanently deleted. This includes objects that are overwritten or are deleted as part of the bucket's lifecycle configuration. For buckets with object versioning enabled, this is not sent when an object is archived."},
+        { "type": "google.cloud.storage.object.v1.archived", "schema": "https://raw.githubusercontent.com/googleapis/google-cloudevents/master/proto/google/events/cloud/storage/v1/data.proto", "description": "Only sent when a bucket has enabled object versioning. This event indicates that the live version of an object has become an archived version, either because it was archived or because it was overwritten by the upload of an object of the same name."},
+        { "type": "google.cloud.storage.object.v1.metadataUpdated", "schema": "https://raw.githubusercontent.com/googleapis/google-cloudevents/master/proto/google/events/cloud/storage/v1/data.proto", "description": "Sent when the metadata of an existing object changes." }
+      ]
+  name: cloudstoragesources.events.cloud.google.com
+spec:
+  group: events.cloud.google.com
+  names:
+    categories:
+    - all
+    - knative
+    - cloudstoragesource
+    - sources
+    kind: CloudStorageSource
+    plural: cloudstoragesources
+  scope: Namespaced
+  preserveUnknownFields: false
+  conversion:
+    strategy: Webhook
+    webhook:
+      # conversionReviewVersions indicates what ConversionReview versions are understood/preferred by the webhook.
+      # The first version in the list understood by the API server is sent to the webhook.
+      # The webhook must respond with a ConversionReview object in the same version it received.
+      conversionReviewVersions: ["v1", "v1beta1"]
+      clientConfig:
+        service:
+          name: webhook
+          namespace: events-system
+  versions:
+  - &version
+    name: v1
+    served: true
+    storage: true
+    subresources:
+      status: {}
+    additionalPrinterColumns:
+    - name: Ready
+      type: string
+      jsonPath: ".status.conditions[?(@.type==\"Ready\")].status"
+    - name: Reason
+      type: string
+      jsonPath: ".status.conditions[?(@.type==\"Ready\")].reason"
+    - name: Age
+      type: date
+      jsonPath: .metadata.creationTimestamp
+    # We remove spec.PayloadFormat status.ServiceAccountName from the schema in v1.
+    schema:
+      openAPIV3Schema: &openAPIV3Schema
+        type: object
+        properties: &properties
+          spec: &spec
+            type: object
+            required:
+            - bucket
+            - sink
+            properties: &specProperties
+              sink:
+                type: object
+                description: >
+                  Sink which receives the notifications.
+
+                properties:
+                  uri:
+                    type: string
+                    minLength: 1
+                  ref:
+                    type: object
+                    required:
+                    - apiVersion
+                    - kind
+                    - name
+                    properties:
+                      apiVersion:
+                        type: string
+                        minLength: 1
+                      kind:
+                        type: string
+                        minLength: 1
+                      namespace:
+                        type: string
+                      name:
+                        type: string
+                        minLength: 1
+              ceOverrides:
+                type: object
+                description: >
+                  Defines overrides to control modifications of the event sent to
+                  the sink.
+
+                properties:
+                  extensions:
+                    type: object
+                    description: >
+                      Extensions specify what attribute are added or overridden on
+                      the outbound event. Each `Extensions` key-value pair are set
+                      on the event as an attribute extension independently.
+
+                    x-kubernetes-preserve-unknown-fields: true
+              serviceAccountName:
+                type: string
+                description: >
+                  Kubernetes service account used to bind to a google service account
+                  to poll the Cloud Pub/Sub Subscription. The value of the Kubernetes
+                  service account must be a valid DNS subdomain name. (see https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#dns-subdomain-names)
+
+              secret:
+                type: object
+                description: >
+                  Credential used to poll the Cloud Pub/Sub Subscription. It is not
+                  used to create or delete the Subscription, only to poll it. The
+                  value of the secret entry must be a service account key in the JSON
+                  format (see https://cloud.google.com/iam/docs/creating-managing-service-account-keys).
+                  Defaults to secret.name of 'google-cloud-key' and secret.key of
+                  'key.json'.
+
+                properties:
+                  name:
+                    type: string
+                  key:
+                    type: string
+                  optional:
+                    type: boolean
+              project:
+                type: string
+                description: >
+                  Google Cloud Project ID of the project into which the topic should
+                  be created. If omitted uses the Project ID from the GKE cluster
+                  metadata service.
+
+              bucket:
+                type: string
+                description: >
+                  GCS bucket to subscribe to. For example 'my-test-bucket'.
+
+              objectNamePrefix:
+                type: string
+                description: >
+                  Optional prefix to only notify when objects match this prefix.
+
+              eventTypes:
+                type: array
+                items:
+                  type: string
+                  enum:
+                  - google.cloud.storage.object.v1.finalized
+                  - google.cloud.storage.object.v1.deleted
+                  - google.cloud.storage.object.v1.archived
+                  - google.cloud.storage.object.v1.metadataUpdated
+          status: &status
+            type: object
+            properties: &statusProperties
+              observedGeneration:
+                type: integer
+                format: int64
+              conditions:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    lastTransitionTime:
+                      # We use a string in the stored object but a wrapper object at runtime.
+                      type: string
+                    message:
+                      type: string
+                    reason:
+                      type: string
+                    severity:
+                      type: string
+                    status:
+                      type: string
+                    type:
+                      type: string
+                  required:
+                  - type
+                  - status
+              sinkUri:
+                type: string
+              ceAttributes:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                    source:
+                      type: string
+              projectId:
+                type: string
+              topicId:
+                type: string
+              subscriptionId:
+                type: string
+              notificationId:
+                type: string
+  - !!merge <<: *version
+    name: v1beta1
+    served: true
+    storage: false
+    # v1beta has spec.properties.payloadFormat and status.properties.serviceAccountName in the schema
+    schema:
+      openAPIV3Schema:
+        !!merge <<: *openAPIV3Schema
+        properties:
+          !!merge <<: *properties
+          spec:
+            !!merge <<: *spec
+            properties:
+              !!merge <<: *specProperties
+              payloadFormat:
+                type: string
+                description: >
+                  Optional payload format. Either NONE or JSON_API_V1. If omitted,
+                  uses JSON_API_V1.
+
+          status:
+            !!merge <<: *status
+            properties:
+              !!merge <<: *statusProperties
+              serviceAccountName:
+                type: string
+
+---
+# Copyright 2020 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    events.cloud.google.com/release: devel
+    events.cloud.google.com/crd-install: "true"
+  name: pullsubscriptions.internal.events.cloud.google.com
+spec:
+  group: internal.events.cloud.google.com
+  names:
+    categories:
+    - all
+    - knative
+    - pubsub
+    kind: PullSubscription
+    plural: pullsubscriptions
+  scope: Namespaced
+  preserveUnknownFields: false
+  conversion:
+    strategy: Webhook
+    webhook:
+      # conversionReviewVersions indicates what ConversionReview versions are understood/preferred by the webhook.
+      # The first version in the list understood by the API server is sent to the webhook.
+      # The webhook must respond with a ConversionReview object in the same version it received.
+      conversionReviewVersions: ["v1", "v1beta1"]
+      clientConfig:
+        service:
+          name: webhook
+          namespace: events-system
+  versions:
+  - &version
+    name: v1
+    served: true
+    storage: true
+    subresources:
+      status: {}
+    additionalPrinterColumns:
+    - name: Ready
+      type: string
+      jsonPath: ".status.conditions[?(@.type==\"Ready\")].status"
+    - name: Reason
+      type: string
+      jsonPath: ".status.conditions[?(@.type==\"Ready\")].reason"
+    - name: Age
+      type: date
+      jsonPath: .metadata.creationTimestamp
+    # We remove spec.properties.mode and status.properties.serviceAccountName from v1.
+    schema:
+      openAPIV3Schema: &openAPIV3Schema
+        type: object
+        properties: &properties
+          spec: &spec
+            # TODO: update the OpenAPI to be much more robust.
+            type: object
+            required:
+            - sink
+            - topic
+            properties: &specProperties
+              serviceAccountName:
+                type: string
+                description: "Kubernetes service account used to bind to a google
+                  service account to poll the Cloud Pub/Sub Subscription. The value
+                  of the Kubernetes service account must be a valid DNS subdomain
+                  name. (see https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#dns-subdomain-names)"
+              secret:
+                type: object
+                description: "Credential used to poll the Cloud Pub/Sub Subscription.
+                  It is not used to create or delete the Subscription, only to poll
+                  it. The value of the secret entry must be a service account key
+                  in the JSON format (see https://cloud.google.com/iam/docs/creating-managing-service-account-keys).
+                  Defaults to secret.name of 'google-cloud-key' and secret.key of
+                  'key.json'."
+                properties:
+                  name:
+                    type: string
+                  key:
+                    type: string
+                  optional:
+                    type: boolean
+              project:
+                type: string
+                description: "ID of the Google Cloud Project that the Pub/Sub Topic
+                  exists in. E.g. 'my-project-1234' rather than its display name,
+                  'My Project' or its number '1234567890'. If omitted uses the Project
+                  ID from the GKE cluster metadata service."
+              sink:
+                type: object
+                description: "Reference to an object that will resolve to a domain
+                  name to use as the sink."
+                properties:
+                  uri:
+                    type: string
+                    minLength: 1
+                  ref:
+                    type: object
+                    required:
+                    - apiVersion
+                    - kind
+                    - name
+                    properties:
+                      apiVersion:
+                        type: string
+                        minLength: 1
+                      kind:
+                        type: string
+                        minLength: 1
+                      namespace:
+                        type: string
+                      name:
+                        type: string
+                        minLength: 1
+              transformer:
+                type: object
+                description: "Reference to an object that will resolve to a domain
+                  name to use as the transformer."
+                x-kubernetes-preserve-unknown-fields: true
+              ceOverrides:
+                type: object
+                description: "Defines overrides to control modifications of the event
+                  sent to the sink."
+                properties:
+                  extensions:
+                    type: object
+                    description: "Extensions specify what attribute are added or overridden
+                      on the outbound event. Each `Extensions` key-value pair are
+                      set on the event as an attribute extension independently."
+                    x-kubernetes-preserve-unknown-fields: true
+              topic:
+                type: string
+                description: "ID of the Cloud Pub/Sub Topic to Subscribe to. It must
+                  be in the form of the unique identifier within the project, not
+                  the entire name. E.g. it must be 'laconia', not 'projects/my-gcp-project/topics/laconia'."
+              ackDeadline:
+                type: string
+                description: "The default maximum time after a subscriber receives
+                  a message before the subscriber should acknowledge the message.
+                  Defaults to `30s`. Valid time units are `s`, `m`, `h`. The minimum
+                  deadline you can specify is 0 seconds. The maximum deadline you
+                  can specify is 600 seconds (10 minutes)."
+              retainAckedMessages:
+                type: boolean
+                description: "Whether to retain acknowledged messages. If true, acknowledged
+                  messages will not be expunged until they fall out of the RetentionDuration
+                  window."
+              retentionDuration:
+                type: string
+                description: "How long to retain messages in backlog, from the time
+                  of publish. If retainAckedMessages is true, this duration affects
+                  the retention of acknowledged messages, otherwise only unacknowledged
+                  messages are retained. Defaults to 7 days (`168h`). Cannot be longer
+                  than 7 days or shorter than 10 minutes. Valid time units are `s`,
+                  `m`, `h`."
+              adapterType:
+                type: string
+                description: "AdapterType determines the type of receive adapter that
+                  a PullSubscription uses."
+          status: &status
+            type: object
+            properties: &statusProperties
+              observedGeneration:
+                type: integer
+                format: int64
+              conditions:
+                items:
+                  properties:
+                    lastTransitionTime:
+                      # we use a string in the stored object but a wrapper object
+                      # at runtime.
+                      type: string
+                    message:
+                      type: string
+                    reason:
+                      type: string
+                    severity:
+                      type: string
+                    status:
+                      type: string
+                    type:
+                      type: string
+                  required:
+                  - type
+                  - status
+                  type: object
+                type: array
+              sinkUri:
+                type: string
+              ceAttributes:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                    source:
+                      type: string
+              projectId:
+                type: string
+              topicId:
+                type: string
+              subscriptionId:
+                type: string
+              transformerUri:
+                type: string
+  - !!merge <<: *version
+    name: v1beta1
+    served: true
+    storage: false
+    # v1beta has spec.properties.mode and status.properties.serviceAccountName in the schema
+    schema:
+      openAPIV3Schema:
+        !!merge <<: *openAPIV3Schema
+        properties:
+          !!merge <<: *properties
+          spec:
+            !!merge <<: *spec
+            properties:
+              !!merge <<: *specProperties
+              mode:
+                type: string
+                enum: [CloudEventsBinary, CloudEventsStructured, PushCompatible]
+                description: "Mode defines the encoding and structure of the payload
+                  of when this PullSubscription invokes the sink. Default is CloudEventsBinary."
+          status:
+            !!merge <<: *status
+            properties:
+              !!merge <<: *statusProperties
+              serviceAccountName:
+                type: string
+
+---
+# Copyright 2020 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: topics.internal.events.cloud.google.com
+  labels:
+    events.cloud.google.com/release: devel
+    events.cloud.google.com/crd-install: "true"
+    duck.knative.dev/addressable: "true"
+spec:
+  group: internal.events.cloud.google.com
+  names:
+    kind: Topic
+    plural: topics
+    singular: topic
+    categories:
+    - all
+    - knative
+    - pubsub
+  scope: Namespaced
+  preserveUnknownFields: false
+  conversion:
+    strategy: Webhook
+    webhook:
+      # conversionReviewVersions indicates what ConversionReview versions are understood/preferred by the webhook.
+      # The first version in the list understood by the API server is sent to the webhook.
+      # The webhook must respond with a ConversionReview object in the same version it received.
+      conversionReviewVersions: ["v1", "v1beta1"]
+      clientConfig:
+        service:
+          name: webhook
+          namespace: events-system
+  versions:
+  - &version
+    name: v1
+    served: true
+    storage: true
+    subresources:
+      status: {}
+    additionalPrinterColumns:
+    - name: Ready
+      type: string
+      jsonPath: ".status.conditions[?(@.type==\"Ready\")].status"
+    - name: Reason
+      type: string
+      jsonPath: ".status.conditions[?(@.type==\"Ready\")].reason"
+    - name: Address
+      type: string
+      jsonPath: .status.address.url
+    - name: Age
+      type: date
+      jsonPath: .metadata.creationTimestamp
+    # We remove status.properties.serviceAccountName from the schema of v1.
+    schema:
+      openAPIV3Schema: &openAPIV3Schema
+        type: object
+        properties: &properties
+          spec:
+            type: object
+            required:
+            - topic
+            properties:
+              serviceAccountName:
+                type: string
+                description: "Kubernetes service account used to bind to a google
+                  service account to poll the Cloud Pub/Sub Subscription. The value
+                  of the Kubernetes service account must be a valid DNS subdomain
+                  name. (see https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#dns-subdomain-names)"
+              secret:
+                type: object
+                description: "Credential used to poll the Cloud Pub/Sub Subscription.
+                  It is not used to create or delete the Subscription, only to poll
+                  it. The value of the secret entry must be a service account key
+                  in the JSON format (see https://cloud.google.com/iam/docs/creating-managing-service-account-keys).
+                  Defaults to secret.name of 'google-cloud-key' and secret.key of
+                  'key.json'."
+                properties:
+                  name:
+                    type: string
+                  key:
+                    type: string
+                  optional:
+                    type: boolean
+              project:
+                type: string
+                description: "ID of the Google Cloud Project to own the Pub/Sub credentials.
+                  E.g. 'my-project-1234' rather than its display name, 'My Project'
+                  or its number '1234567890'. If omitted uses the Project ID from
+                  the GKE cluster metadata service."
+              topic:
+                type: string
+                description: "ID of the Cloud Pub/Sub Topic to create. It must be
+                  in the form of the unique identifier within the project, not the
+                  entire name. E.g. it must be 'laconia', not 'projects/my-gcp-project/topics/laconia'."
+              propagationPolicy:
+                type: string
+                enum: [CreateDelete, CreateNoDelete, NoCreateNoDelete]
+                description: "Propagation policy defines how Topic controls the Cloud
+                  Pub/Sub topic for lifecycle changes. Default is CreateNoDelete."
+              publisher:
+                type: boolean
+                description: "Flag that controls the creation of an HTTP publisher
+                  endpoint. If set to true, then a publisher will be created and this
+                  Topic will be Addressable (have status.address). If set to false,
+                  then no publisher will be created and this custom object represents
+                  the creation and deletion of a GCP Pub/Sub Topic only."
+          status: &status
+            type: object
+            properties: &statusProperties
+              observedGeneration:
+                type: integer
+                format: int64
+              conditions:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    lastTransitionTime:
+                      # we use a string in the stored object but a wrapper object
+                      # at runtime.
+                      type: string
+                    message:
+                      type: string
+                    reason:
+                      type: string
+                    severity:
+                      type: string
+                    status:
+                      type: string
+                    type:
+                      type: string
+                  required:
+                  - type
+                  - status
+              projectId:
+                type: string
+              topicId:
+                type: string
+              address:
+                type: object
+                properties:
+                  url:
+                    type: string
+  - !!merge <<: *version
+    name: v1beta1
+    served: true
+    storage: false
+    # v1beta1 has serviceAccountName in status.properties in the schema
+    schema:
+      openAPIV3Schema:
+        !!merge <<: *openAPIV3Schema
+        properties:
+          !!merge <<: *properties
+          status:
+            !!merge <<: *status
+            properties:
+              !!merge <<: *statusProperties
+              serviceAccountName:
+                type: string
+
+---
+# Copyright 2020 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-br-default-channel
+  namespace: events-system
+data:
+  channelTemplateSpec: |
+    apiVersion: messaging.cloud.google.com/v1beta1
+    kind: Channel
+
+---
+# Copyright 2020 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-br-delivery
+  namespace: events-system
+  annotations:
+    knative.dev/example-checksum: "a7f41751"
+data:
+  default-br-delivery-config: |
+    clusterDefaults:
+      backoffDelay: PT1S
+      backoffPolicy: exponential
+  _example: |
+    ################################
+    #                              #
+    #    EXAMPLE CONFIGURATION     #
+    #                              #
+    ################################
+
+    # This block is not actually functional configuration,
+    # but serves to illustrate the available configuration
+    # options and document them in a way that is accessible
+    # to users that `kubectl edit` this config map.
+    #
+    # These sample configuration options may be copied out of
+    # this example block and unindented to be in the data block
+    # to actually change the configuration.
+
+    # default-br-delivery-config is the configuration for determining the default
+    # Broker delivery settings to apply on all GCP Brokers created within a scope.
+    #
+    # When determining the defaults to use for a custom object in a specific
+    # namespace, the precedence rules are:
+    # If the Broker's spec specifies the delivery settings to use, use that.
+    # If not and that namespace is in the `namespaceDefaults` key, then use the
+    # defaults specified there. If not, then use the defaults specified in
+    # `clusterDefaults`.
+    default-br-delivery-config: |
+      # clusterDefaults are the defaults to apply to every namespace in the
+      # cluster, except those in the `namespaceDefaults` sibling key.
+      clusterDefaults:
+        # backoffDelay is the delay before retrying.
+        # More information on Duration format:
+        #  - https://www.iso.org/iso-8601-date-and-time-format.html
+        #  - https://en.wikipedia.org/wiki/ISO_8601
+        #
+        # For linear policy, backoff delay is the time interval between retries.
+        # For exponential policy, backoff delay is backoffDelay*2^<numberOfRetries>.
+        backoffDelay: PT1S
+        # backoffPolicy is the retry backoff policy (linear, exponential).
+        backoffPolicy: exponential
+        # deadLetterSink is the sink receiving event that could not be sent to
+        # a destination.
+        deadLetterSink:
+          # uri is a URI with scheme pubsub indicating the dead letter pubsub topic ID.
+          uri: pubsub://cluster-default-dead-letter-topic-id
+        # retry is the minimum number of retries the sender should attempt when
+        # sending an event before moving it to the dead letter sink.
+        retry: 10
+      # namespaceDefaults is a map from namespace name to default configuration.
+      # The default configuration is exactly the same as the one defined in
+      # the `clusterDefaults` sibling key.
+      namespaceDefaults:
+        customized-ns:
+          backoffDelay: PT5S
+          backoffPolicy: linear
+          deadLetterSink:
+            uri: pubsub://ns-default-dead-letter-topic-id
+          retry: 20
+
+---
+# Copyright 2019 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: controller
+  namespace: events-system
+  labels:
+    events.cloud.google.com/release: devel
+    app: events-system-controller
+spec:
+  selector:
+    app: events-system-controller
+  ports:
+  - name: metrics
+    port: 9090
+    protocol: TCP
+    targetPort: 9090
+
+---
+# Copyright 2019 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    role: webhook
+    events.cloud.google.com/release: devel
+  name: webhook
+  namespace: events-system
+spec:
+  ports:
+  - port: 443
+    targetPort: 8443
+  selector:
+    role: webhook
+
+---
+# Copyright 2019 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: controller
+  namespace: events-system
+  labels:
+    events.cloud.google.com/release: devel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: events-system
+      role: controller
+  template:
+    metadata:
+      labels:
+        app: events-system
+        role: controller
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      serviceAccountName: controller
+      containers:
+      - name: controller
+        image: gcr.io/aroatis-gke-dev/cr-operator/github.com/google/knative-gcp/cmd/controller@sha256:427ab24f818ab9f9510fcc05f4c635ff6653a58c3891e7047a496bd8c51e139c
+        # TODO enable HA once https://github.com/google/knative-gcp/issues/1466 is fixed.
+        args:
+        - "--disable-ha"
+        imagePullPolicy: Always
+        env:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /var/secrets/google/key.json
+        - name: PUBSUB_RA_IMAGE
+          value: gcr.io/aroatis-gke-dev/cr-operator/github.com/google/knative-gcp/cmd/pubsub/receive_adapter@sha256:5a7ce7a7237c1d16cfdc0c71f60168a6c95a68e1da5cde79098f9d42b49f9cf8
+        - name: PUBSUB_PUBLISHER_IMAGE
+          value: gcr.io/aroatis-gke-dev/cr-operator/github.com/google/knative-gcp/cmd/pubsub/publisher@sha256:a993ab293ab1251e215f63ba5a2b4cc57e70ba8bf25b011220e5cc8a171ef54d
+        - name: SYSTEM_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: CONFIG_LOGGING_NAME
+          value: config-logging
+        - name: CONFIG_OBSERVABILITY_NAME
+          value: config-observability
+        - name: CONFIG_LEADERELECTION_NAME
+          value: config-leader-election
+        - name: METRICS_DOMAIN
+          value: cloud.google.com/events
+        - name: BROKER_CELL_INGRESS_IMAGE
+          value: gcr.io/aroatis-gke-dev/cr-operator/github.com/google/knative-gcp/cmd/broker/ingress@sha256:3eae501fcf623efa223d2638c63032643b247cf7a9ec3e1c8cd9420b32750986
+        - name: BROKER_CELL_FANOUT_IMAGE
+          value: gcr.io/aroatis-gke-dev/cr-operator/github.com/google/knative-gcp/cmd/broker/fanout@sha256:1e74fb2606b9d3bcfe61a1a33e2153388a66da0f366bfc445a42ac98f82e6a80
+        - name: BROKER_CELL_RETRY_IMAGE
+          value: gcr.io/aroatis-gke-dev/cr-operator/github.com/google/knative-gcp/cmd/broker/retry@sha256:58f399fe6a7b1cf1ba0ac6bd53171b5cfb9a1ac889cd09fde8b1441a69354b3b
+        - name: INTERNAL_METRICS_ENABLED
+          value: "false"
+        volumeMounts:
+        - name: google-cloud-key
+          mountPath: /var/secrets/google
+        - name: config-logging
+          mountPath: /etc/config-logging
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 1000Mi
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        ports:
+        - name: metrics
+          containerPort: 9090
+      volumes:
+      - name: config-logging
+        configMap:
+          name: config-logging
+      - name: google-cloud-key
+        secret:
+          secretName: google-cloud-key
+          optional: true
+      terminationGracePeriodSeconds: 10
+
+---
+# Copyright 2020 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: config.webhook.events.cloud.google.com
+  labels:
+    events.cloud.google.com/release: devel
+webhooks:
+- admissionReviewVersions:
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook
+      namespace: events-system
+  failurePolicy: Fail
+  sideEffects: None
+  name: config.webhook.events.cloud.google.com
+  namespaceSelector:
+    matchExpressions:
+    - key: events.cloud.google.com/release
+      operator: Exists
+
+---
+# Copyright 2020 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: webhook.events.cloud.google.com
+  labels:
+    events.cloud.google.com/release: devel
+webhooks:
+- admissionReviewVersions:
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook
+      namespace: events-system
+  failurePolicy: Fail
+  sideEffects: None
+  name: webhook.events.cloud.google.com
+
+---
+# Copyright 2020 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: validation.webhook.events.cloud.google.com
+  labels:
+    events.cloud.google.com/release: devel
+webhooks:
+- admissionReviewVersions:
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook
+      namespace: events-system
+  failurePolicy: Fail
+  sideEffects: None
+  name: validation.webhook.events.cloud.google.com
+
+---
+# Copyright 2020 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: webhook-certs
+  namespace: events-system
+  labels:
+    events.cloud.google.com/release: devel
+# The data is populated at install time.
+
+---
+# Copyright 2019 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webhook
+  namespace: events-system
+  labels:
+    events.cloud.google.com/release: devel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: events-system
+      role: webhook
+  template:
+    metadata:
+      labels:
+        app: events-system
+        role: webhook
+        events.cloud.google.com/release: devel
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      serviceAccountName: webhook
+      containers:
+      - name: webhook
+        terminationMessagePolicy: FallbackToLogsOnError
+        # This is the Go import path for the binary that is containerized
+        # and substituted here.
+        image: gcr.io/aroatis-gke-dev/cr-operator/github.com/google/knative-gcp/cmd/webhook@sha256:f2d323819c903c3a09a98e90f8ef9014e41aa3749d3fbf7249c7c6240dd09295
+        resources:
+          requests:
+            # taken from serving.
+            cpu: 20m
+            memory: 20Mi
+          limits:
+            # taken from serving.
+            cpu: 200m
+            memory: 200Mi
+        env:
+        - name: SYSTEM_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: CONFIG_LOGGING_NAME
+          value: config-logging
+        - name: METRICS_DOMAIN
+          value: cloud.google.com/events
+        - name: WEBHOOK_NAME
+          value: webhook
+
+---
+# Copyright 2020 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-dataresidency
+  namespace: events-system
+  annotations:
+    knative.dev/example-checksum: "809e8f92"
+data:
+  default-dataresidency-config: |
+    clusterDefaults:
+      messagestoragepolicy.allowedpersistenceregions: []
+  _example: |
+    ################################
+    #                              #
+    #    EXAMPLE CONFIGURATION     #
+    #                              #
+    ################################
+
+    # This block is not actually functional configuration,
+    # but serves to illustrate the available configuration
+    # options and document them in a way that is accessible
+    # to users that `kubectl edit` this config map.
+    #
+    # These sample configuration options may be copied out of
+    # this example block and unindented to be in the data block
+    # to actually change the configuration.
+
+    # default-dataresidency-config is the configuration for determining the default
+    # data residency to apply to all objects that require data residency.
+    # This is expected to be Channels and Sources and Brokers.
+    #
+    # We only support cluster scoped now
+    default-dataresidency-config: |
+      # clusterDefaults are the defaults to apply to every namespace in the
+      # cluster
+      clusterDefaults:
+        # messagestoragepolicy.allowedpersistenceregions field specifies
+        # all the allowed regions for data residency. The default or an empty value will
+        # mean no data residency requirement.
+        messagestoragepolicy.allowedpersistenceregions:
+          - us-east1
+          - us-west1
+
+---
+# Copyright 2020 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-gcp-auth
+  namespace: events-system
+  labels:
+    events.cloud.google.com/release: devel
+  annotations:
+    events.cloud.google.com/initialized: "false"
+    knative.dev/example-checksum: 529ddd38
+data:
+  default-auth-config: |
+    clusterDefaults:
+      secret:
+        name: google-cloud-key
+        key: key.json
+  _example: |
+    ################################
+    #                              #
+    #    EXAMPLE CONFIGURATION     #
+    #                              #
+    ################################
+
+    # This block is not actually functional configuration,
+    # but serves to illustrate the available configuration
+    # options and document them in a way that is accessible
+    # to users that `kubectl edit` this config map.
+    #
+    # These sample configuration options may be copied out of
+    # this example block and unindented to be in the data block
+    # to actually change the configuration.
+
+    # default-auth-config is the configuration for determining the default
+    # GCP auth to apply to all objects that require GCP auth but,
+    # do not specify it. This is expected to be Channels and Sources.
+    #
+    # When determining the defaults to use for a custom object in a specific
+    # namespace, the precedence rules are:
+    # If the custom object's spec specifies the GCP auth to use, use that.
+    # If not and that namespace is in the `namespaceDefaults` key, then use the
+    # defaults specified there. If not, then use the defaults specified in
+    # `clusterDefaults`.
+    default-auth-config: |
+      # clusterDefaults are the defaults to apply to every namespace in the
+      # cluster, except those in the `namespaceDefaults` sibling key.
+      clusterDefaults:
+        # The Kubernetes Service Account to use for all data plane pieces. This
+        # is expected to be used for Workload Identity workloads. If omitted or
+        # left blank, then Kubernetes will choose the default Service Account.
+        serviceAccountName: cluster-default-ksa
+        # The Kubernetes SecretKeySelector pointing to the Secret to use. Note
+        # that this secret must exist in the namespace of the custom object
+        # being created.
+        secret:
+          name: google-cloud-key
+          key: key.json
+        # Mapping from Kubernetes Service Account to Google IAM Service Account.
+        # If a custom object's Kubernetes Service Account is in this map, then
+        # the controller will attempt to setup Workload Identity between the
+        # two accounts. If the controller is unable to, then the custom object
+        # will not become ready.
+        workloadIdentityMapping:
+          cluster-wi-ksa1: cluster-wi-gsa1@PROJECT.iam.gserviceaccount.com
+          cluster-wi-ksa2: cluster-wi-gsa2@PROJECT.iam.gserviceaccount.com
+      # namespaceDefaults is a map from namespace name to default configuration.
+      # The default configuration is exactly the same as the one defined in
+      # the `clusterDefaults` sibling key.
+      namespaceDefaults:
+        # It is acceptable to turn off defaulting for any namespace.
+        empty-ns: {}
+        customized-ns:
+          serviceAccountName: ns-default-ksa
+          secret:
+            name: some-other-name
+            key: some-other-key
+          workloadIdentityMapping:
+            ns-wi-ksa1: ns-wi-gsa1@PROJECT.iam.gserviceaccount.com
+            ns-wi-ksa2: ns-wi-gsa2@PROJECT.iam.gserviceaccount.com
+
+---
+# Copyright 2020 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-leader-election
+  namespace: events-system
+  labels:
+    events.cloud.google.com/release: devel
+  annotations:
+    knative.dev/example-checksum: 6cf53e10
+data:
+  _example: |
+    ################################
+    #                              #
+    #    EXAMPLE CONFIGURATION     #
+    #                              #
+    ################################
+    # This block is not actually functional configuration,
+    # but serves to illustrate the available configuration
+    # options and document them in a way that is accessible
+    # to users that `kubectl edit` this config map.
+    #
+    # These sample configuration options may be copied out of
+    # this example block and unindented to be in the data block
+    # to actually change the configuration.
+    # leaseDuration is how long non-leaders will wait to try to acquire the
+    # lock; 15 seconds is the value used by core kubernetes controllers.
+    leaseDuration: "15s"
+    # renewDeadline is how long a leader will try to renew the lease before
+    # giving up; 10 seconds is the value used by core kubernetes controllers.
+    renewDeadline: "10s"
+    # retryPeriod is how long the leader election client waits between tries of
+    # actions; 2 seconds is the value used by core kuberntes controllers.
+    retryPeriod: "2s"
+
+---
+# Copyright 2018 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-logging
+  namespace: events-system
+  labels:
+    events.cloud.google.com/release: devel
+  annotations:
+    knative.dev/example-checksum: 17b5ff48
+data:
+  _example: |
+    ################################
+    #                              #
+    #    EXAMPLE CONFIGURATION     #
+    #                              #
+    ################################
+
+    # This block is not actually functional configuration,
+    # but serves to illustrate the available configuration
+    # options and document them in a way that is accessible
+    # to users that `kubectl edit` this config map.
+    #
+    # These sample configuration options may be copied out of
+    # this example block and unindented to be in the data block
+    # to actually change the configuration.
+
+    # Common configuration for all Knative codebase
+    zap-logger-config: |
+      {
+        "level": "info",
+        "development": false,
+        "outputPaths": ["stdout"],
+        "errorOutputPaths": ["stderr"],
+        "encoding": "json",
+        "encoderConfig": {
+          "timeKey": "ts",
+          "levelKey": "level",
+          "nameKey": "logger",
+          "callerKey": "caller",
+          "messageKey": "msg",
+          "stacktraceKey": "stacktrace",
+          "lineEnding": "",
+          "levelEncoder": "",
+          "timeEncoder": "iso8601",
+          "durationEncoder": "",
+          "callerEncoder": ""
+        }
+      }
+
+    # Log level overrides, updated values are used immediately. They do not need
+    # Pod restarts.
+    loglevel.controller: "info"
+    loglevel.webhook: "info"
+
+---
+# Copyright 2019 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-observability
+  namespace: events-system
+  labels:
+    events.cloud.google.com/release: devel
+  annotations:
+    knative.dev/example-checksum: 4df07073
+data:
+  metrics.backend-destination: stackdriver
+  metrics.reporting-period-seconds: "60"
+  _example: |
+    ################################
+    #                              #
+    #    EXAMPLE CONFIGURATION     #
+    #                              #
+    ################################
+
+    # This block is not actually functional configuration,
+    # but serves to illustrate the available configuration
+    # options and document them in a way that is accessible
+    # to users that `kubectl edit` this config map.
+    #
+    # These sample configuration options may be copied out of
+    # this example block and unindented to be in the data block
+    # to actually change the configuration.
+
+    # metrics.backend-destination field specifies the system metrics destination.
+    # It supports either prometheus (the default) or stackdriver.
+    # Note: Using stackdriver will incur additional charges
+    metrics.backend-destination: prometheus
+
+    # metrics.stackdriver-project-id field specifies the stackdriver project ID. This
+    # field is optional. When running on GCE, application default credentials will be
+    # used if this field is not provided.
+    metrics.stackdriver-project-id: "<your stackdriver project id>"
+
+    # metrics.allow-stackdriver-custom-metrics indicates whether it is allowed to send metrics to
+    # Stackdriver using "global" resource type and custom metric type if the
+    # metrics are not supported by "knative_source" resource type. Setting this
+    # flag to "true" could cause extra Stackdriver charge.
+    # If metrics.backend-destination is not Stackdriver, this is ignored.
+    metrics.allow-stackdriver-custom-metrics: "false"
+
+    # stackdriver-custom-metrics-subdomain is the subdomain to use when sending custom metrics to StackDriver.
+    # If not specified, the default is set to "knative.dev".
+    # If metrics.backend-destination is not Stackdriver, this is ignored.
+    metrics.stackdriver-custom-metrics-subdomain: "<your subdomain>"
+
+---
+# Copyright 2019 The Knative Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-tracing
+  namespace: events-system
+  annotations:
+    knative.dev/example-checksum: 4002b4c2
+data:
+  _example: |
+    ################################
+    #                              #
+    #    EXAMPLE CONFIGURATION     #
+    #                              #
+    ################################
+    # This block is not actually functional configuration,
+    # but serves to illustrate the available configuration
+    # options and document them in a way that is accessible
+    # to users that `kubectl edit` this config map.
+    #
+    # These sample configuration options may be copied out of
+    # this example block and unindented to be in the data block
+    # to actually change the configuration.
+    #
+    # This may be "zipkin" or "stackdriver", the default is "none"
+    backend: "none"
+
+    # URL to zipkin collector where traces are sent.
+    # This must be specified when backend is "zipkin"
+    zipkin-endpoint: "http://zipkin.istio-system.svc.cluster.local:9411/api/v2/spans"
+
+    # The GCP project into which stackdriver metrics will be written
+    # when backend is "stackdriver".  If unspecified, the project-id
+    # is read from GCP metadata when running on GCP.
+    stackdriver-project-id: "my-project"
+
+    # Enable zipkin debug mode. This allows all spans to be sent to the server
+    # bypassing sampling.
+    debug: "false"
+
+    # Percentage (0-1) of requests to trace
+    sample-rate: "0.1"
+
+---

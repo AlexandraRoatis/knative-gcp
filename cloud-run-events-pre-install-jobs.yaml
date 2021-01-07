@@ -1,0 +1,368 @@
+# Copyright 2020 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    duck.knative.dev/source: "true"
+    events.cloud.google.com/release: devel
+    events.cloud.google.com/crd-install: "true"
+  annotations:
+    registry.knative.dev/eventTypes: |
+      [
+        {
+          "type": "google.cloud.cloudbuild.build.v1.statusChanged",
+          "schema": "https://raw.githubusercontent.com/googleapis/google-cloudevents/master/proto/google/events/cloud/cloudbuild/v1/data.proto",
+          "description": "This event is sent when your build's state changes, such as when your build is created, when your build transitions to a working state, and when your build completes."
+        }
+      ]
+  name: cloudbuildsources.events.cloud.google.com
+spec:
+  group: events.cloud.google.com
+  names:
+    categories:
+    - all
+    - knative
+    - cloudbuildsource
+    - sources
+    kind: CloudBuildSource
+    plural: cloudbuildsources
+  scope: Namespaced
+  preserveUnknownFields: false
+  conversion:
+    strategy: Webhook
+    webhook:
+      # conversionReviewVersions indicates what ConversionReview versions are understood/preferred by the webhook.
+      # The first version in the list understood by the API server is sent to the webhook.
+      # The webhook must respond with a ConversionReview object in the same version it received.
+      conversionReviewVersions: ["v1", "v1beta1"]
+      clientConfig:
+        service:
+          name: webhook
+          namespace: events-system
+  versions:
+  - &version
+    name: v1
+    served: true
+    storage: true
+    subresources:
+      status: {}
+    additionalPrinterColumns:
+    - name: Ready
+      type: string
+      jsonPath: ".status.conditions[?(@.type==\"Ready\")].status"
+    - name: Reason
+      type: string
+      jsonPath: ".status.conditions[?(@.type==\"Ready\")].reason"
+    - name: Age
+      type: date
+      jsonPath: .metadata.creationTimestamp
+    # We remove status.ServiceAccountName from the schema in v1.
+    schema: &v1Schema
+      openAPIV3Schema: &openAPIV3Schema
+        type: object
+        properties: &properties
+          spec:
+            type: object
+            required:
+            - sink
+            properties:
+              sink:
+                type: object
+                description: >
+                  Sink which receives the notifications.
+
+                properties:
+                  uri:
+                    type: string
+                    minLength: 1
+                  ref:
+                    type: object
+                    required:
+                    - apiVersion
+                    - kind
+                    - name
+                    properties:
+                      apiVersion:
+                        type: string
+                        minLength: 1
+                      kind:
+                        type: string
+                        minLength: 1
+                      namespace:
+                        type: string
+                      name:
+                        type: string
+                        minLength: 1
+              ceOverrides:
+                type: object
+                description: >
+                  Defines overrides to control modifications of the event sent to
+                  the sink.
+
+                properties:
+                  extensions:
+                    type: object
+                    description: >
+                      Extensions specify what attribute are added or overridden on
+                      the outbound event. Each `Extensions` key-value pair are set
+                      on the event as an attribute extension independently.
+
+                    x-kubernetes-preserve-unknown-fields: true
+              serviceAccountName:
+                type: string
+                description: >
+                  Kubernetes service account used to bind to a google service account
+                  to poll the Cloud Pub/Sub Subscription. The value of the Kubernetes
+                  service account must be a valid DNS subdomain name. (see https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#dns-subdomain-names)
+
+              secret:
+                type: object
+                description: >
+                  Credential used to poll the Cloud Pub/Sub Subscription. It is not
+                  used to create or delete the Subscription, only to poll it. The
+                  value of the secret entry must be a service account key in the JSON
+                  format (see https://cloud.google.com/iam/docs/creating-managing-service-account-keys).
+                  Defaults to secret.name of 'google-cloud-key' and secret.key of
+                  'key.json'.
+
+                properties:
+                  name:
+                    type: string
+                  key:
+                    type: string
+                  optional:
+                    type: boolean
+              project:
+                type: string
+                description: >
+                  Google Cloud Project ID of the project into which the topic should
+                  be created. If omitted uses the Project ID from the GKE cluster
+                  metadata service.
+
+          status: &status
+            type: object
+            properties: &statusProperties
+              observedGeneration:
+                type: integer
+                format: int64
+              conditions:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    lastTransitionTime:
+                      # We use a string in the stored object but a wrapper object at runtime.
+                      type: string
+                    message:
+                      type: string
+                    reason:
+                      type: string
+                    severity:
+                      type: string
+                    status:
+                      type: string
+                    type:
+                      type: string
+                  required:
+                  - type
+                  - status
+              sinkUri:
+                type: string
+              ceAttributes:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                    source:
+                      type: string
+              projectId:
+                type: string
+              topicId:
+                type: string
+              subscriptionId:
+                type: string
+  - !!merge <<: *version
+    name: v1beta1
+    served: true
+    storage: false
+    schema: *v1Schema
+  - !!merge <<: *version
+    name: v1alpha1
+    # TODO: Flip served bit of v1alpha1 in https://github.com/google/knative-gcp/issues/1544.
+    served: true
+    storage: false
+    # v1alpha1 have status.properties.serviceAccountName in the schema
+    schema:
+      openAPIV3Schema:
+        !!merge <<: *openAPIV3Schema
+        properties:
+          !!merge <<: *properties
+          status:
+            !!merge <<: *status
+            properties:
+              !!merge <<: *statusProperties
+              serviceAccountName:
+                type: string
+
+---
+# Copyright 2020 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: knative-gcp-pre-install-job-role-v0-19-0
+  labels:
+    events.cloud.google.com/release: devel
+rules:
+- # Storage version upgrader needs to be able to patch CRDs.
+  apiGroups:
+  - "apiextensions.k8s.io"
+  resources:
+  - "customresourcedefinitions"
+  - "customresourcedefinitions/status"
+  verbs:
+  - "get"
+  - "list"
+  - "update"
+  - "patch"
+  - "watch"
+- # Our own resources we care about.
+  apiGroups:
+  - "events.cloud.google.com"
+  resources:
+  - "cloudbuildsources"
+  verbs: &everything
+  - "get"
+  - "list"
+  - "create"
+  - "update"
+  - "delete"
+  - "patch"
+  - "watch"
+
+---
+# Copyright 2020 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: knative-gcp-pre-install-job-v0-19-0
+  namespace: events-system
+  labels:
+    events.cloud.google.com/release: devel
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: knative-gcp-pre-install-job-role-binding-v0-19-0
+  labels:
+    events.cloud.google.com/release: devel
+subjects:
+- kind: ServiceAccount
+  name: knative-gcp-pre-install-job-v0-19-0
+  namespace: events-system
+roleRef:
+  kind: ClusterRole
+  name: knative-gcp-pre-install-job-role-v0-19-0
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# Copyright 2020 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  # naming it to storage-version-migration-knative-gcp-v0.19.0 will create the job,
+  # but leaves the job in a limbo state that it does not start:
+  #
+  # $ kubectl get job -n events-system
+  # NAME                                            COMPLETIONS   DURATION   AGE
+  # storage-version-migration-knative-gcp           1/1           8s         13m
+  # storage-version-migration-knative-gcp-v0.19.0   0/1                      15s
+  #
+  # The corresponding pod is not created either:
+  #
+  # $ kubectl get pods -n events-system
+  # NAME                                                  READY   STATUS      RESTARTS   AGE
+  # controller-7847f7d8d7-mwdsm                           1/1     Running     0          4m31s
+  # storage-version-migration-knative-gcp-fsxvk           0/1     Completed   0          13m
+  # webhook-64b8795fcd-lflhh                              1/1     Running     0          5m49s
+  #
+  # The reason is why this is happening is unknown, changing it to the following name works.
+  name: storage-version-migration-knative-gcp-v0-19-0
+  namespace: events-system
+  labels:
+    app: "storage-version-migration-knative-gcp-v0-19-0"
+    events.cloud.google.com/release: devel
+spec:
+  ttlSecondsAfterFinished: 600
+  backoffLimit: 10
+  template:
+    metadata:
+      labels:
+        app: "storage-version-migration-knative-gcp-v0-19-0"
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      serviceAccountName: knative-gcp-pre-install-job-v0-19-0
+      restartPolicy: OnFailure
+      containers:
+      - name: migrate
+        # This is the Go import path for the binary that is containerized
+        # and substituted here.
+        image: gcr.io/aroatis-gke-dev/cr-operator/github.com/google/knative-gcp/vendor/knative.dev/pkg/apiextensions/storageversion/cmd/migrate@sha256:7911e64def2a7e290d7a55444d131d7ae597d153d21135cf4a430e8f005abfa9
+        args:
+        - "cloudbuildsources.events.cloud.google.com"
+
+---
